@@ -1,0 +1,107 @@
+version: '3.8'
+
+services:
+  # PostgreSQL 데이터베이스
+  postgres:
+    image: postgres:15-alpine
+    container_name: info-guard-postgres
+    environment:
+      POSTGRES_DB: info_guard
+      POSTGRES_USER: info_guard_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secure_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - info-guard-network
+    restart: unless-stopped
+
+  # Redis 캐시
+  redis:
+    image: redis:7-alpine
+    container_name: info-guard-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - info-guard-network
+    restart: unless-stopped
+
+  # Python AI 서버
+  python-server:
+    build:
+      context: ../python-server
+      dockerfile: ../docker/python/Dockerfile
+    container_name: info-guard-python
+    environment:
+      - DATABASE_URL=postgresql://info_guard_user:${POSTGRES_PASSWORD:-secure_password}@postgres:5432/info_guard
+      - REDIS_URL=redis://redis:6379
+      - HOST=0.0.0.0
+      - PORT=8000
+      - DEBUG=false
+      - LOG_LEVEL=INFO
+    volumes:
+      - ../python-server:/app
+      - /app/ai_models/cache
+    ports:
+      - "8000:8000"
+    networks:
+      - info-guard-network
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+
+  # Node.js 백엔드 서버
+  nodejs-server:
+    build:
+      context: ../nodejs-server
+      dockerfile: ../docker/nodejs/Dockerfile
+    container_name: info-guard-nodejs
+    environment:
+      - DATABASE_URL=postgresql://info_guard_user:${POSTGRES_PASSWORD:-secure_password}@postgres:5432/info_guard
+      - REDIS_URL=redis://redis:6379
+      - PYTHON_AI_URL=http://python-server:8000
+      - PORT=3000
+      - NODE_ENV=production
+    volumes:
+      - ../nodejs-server:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    networks:
+      - info-guard-network
+    depends_on:
+      - postgres
+      - redis
+      - python-server
+    restart: unless-stopped
+
+  # Nginx 리버스 프록시
+  nginx:
+    image: nginx:alpine
+    container_name: info-guard-nginx
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - info-guard-network
+    depends_on:
+      - python-server
+      - nodejs-server
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  info-guard-network:
+    driver: bridge

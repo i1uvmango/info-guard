@@ -1,0 +1,62 @@
+[
+  {
+    "text": "특별한 점은 없지만 나쁘지 않아요.",
+    "label": "neutral"
+  },
+  {
+    "text": "이런 영상은 필요 없어요.",
+    "label": "negative"
+  },
+  {
+    "text": "평범한 영상이네요.",
+    "label": "neutral"
+  },
+  {
+    "text": "그럭저럭 괜찮은 내용이에요.",
+    "label": "neutral"
+  },
+  {
+    "text": "품질이 좋지 않습니다.",
+    "label": "negative"
+  },
+  {
+    "text": "시간 낭비였어요.",
+    "label": "negative"
+  },
+  {
+    "text": "이 영상은 보통 수준입니다.",
+    "label": "neutral"
+  },
+  {
+    "text": "매우 도움이 되는 내용이었습니다.",
+    "label": "positive"
+  },
+  {
+    "text": "보통의 품질을 가지고 있습니다.",
+    "label": "neutral"
+  },
+  {
+    "text": "정말 좋은 영상이네요!",
+    "label": "positive"
+  },
+  {
+    "text": "이런 영상이 더 필요해요.",
+    "label": "positive"
+  },
+  {
+    "text": "내용이 부족하고 실망스럽습니다.",
+    "label": "negative"
+  },
+  {
+    "text": "이 영상은 정말 유익하고 재미있어요!",
+    "label": "positive"
+  },
+  {
+    "text": "훌륭한 정보를 제공해주셔서 감사합니다.",
+    "label": "positive"
+  },
+  {
+    "text": "이 영상은 별로 도움이 안 되었어요.",
+    "label": "negative"
+  }
+]

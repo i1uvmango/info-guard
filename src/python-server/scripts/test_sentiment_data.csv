@@ -1,0 +1,16 @@
+text,label
+특별한 점은 없지만 나쁘지 않아요.,neutral
+이런 영상은 필요 없어요.,negative
+평범한 영상이네요.,neutral
+그럭저럭 괜찮은 내용이에요.,neutral
+품질이 좋지 않습니다.,negative
+시간 낭비였어요.,negative
+이 영상은 보통 수준입니다.,neutral
+매우 도움이 되는 내용이었습니다.,positive
+보통의 품질을 가지고 있습니다.,neutral
+정말 좋은 영상이네요!,positive
+이런 영상이 더 필요해요.,positive
+내용이 부족하고 실망스럽습니다.,negative
+이 영상은 정말 유익하고 재미있어요!,positive
+훌륭한 정보를 제공해주셔서 감사합니다.,positive
+이 영상은 별로 도움이 안 되었어요.,negative
