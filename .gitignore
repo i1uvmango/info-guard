@@ -408,48 +408,76 @@ config/local/
 test_security.py
 security_test_*.py
 
-# AI model files (usually large)
+# AI model files (usually large) - CRITICAL for large files
 *.pkl
 *.pickle
 *.h5
 *.hdf5
 *.model
 *.bin
+*.pth
+*.pt
+*.onnx
+*.safetensors
 
-# Data files
-*.csv
-*.json
-*.xml
-*.yaml
-*.yml
+# Specific AI model files that should never be committed
+src/python-server/ai-service/models/*.pth
+src/python-server/ai-service/multitask_credibility_model_optimized.pth
+src/python-server/ai-service/models/credibility_model.pth
+src/python-server/ai-service/ai_models/*.pth
+src/python-server/ai-service/ai_models/*.pt
+src/python-server/ai-service/ai_models/*.pkl
 
-# Log files
-*.log
-logs/
+# Large data files
+src/python-server/ai-service/processed_data/
+src/python-server/ai-service/data/
+src/python-server/ai-service/data_processing/
+src/python-server/ai-service/ai-models/
 
-# Environment files
-.env
-.env.local
-.env.production
-.env.development
-.env.*
-*.env
+# Virtual environments - more comprehensive
+src/python-server/venv/
+src/python-server/.venv/
+src/python-server/env/
+src/python-server/.env
+src/python-server/.env.*
+
+# Node.js dependencies
+src/nodejs-server/node_modules/
+src/chrome-extension/node_modules/
+
+# Build artifacts
+src/python-server/build/
+src/python-server/dist/
+src/nodejs-server/build/
+src/nodejs-server/dist/
+
+# Database files
+src/python-server/*.db
+src/python-server/*.sqlite
+src/python-server/*.sqlite3
+src/nodejs-server/*.db
+src/nodejs-server/*.sqlite
+src/nodejs-server/*.sqlite3
+
+# Logs and temporary files
+src/python-server/logs/
+src/python-server/*.log
+src/nodejs-server/logs/
+src/nodejs-server/*.log
 
 # Cache directories
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-env/
-pip-log.txt
-pip-delete-this-directory.txt
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-.hypothesis/
-.pytest_cache/
+src/python-server/__pycache__/
+src/python-server/.pytest_cache/
+src/python-server/.coverage
+src/nodejs-server/.nyc_output/
+src/nodejs-server/coverage/
+
+# Docker volumes and data
+src/docker/*/data/
+src/docker/*/volumes/
+
+# Chrome extension build files
+src/chrome-extension/*.crx
+src/chrome-extension/*.pem
+src/chrome-extension/build/
+src/chrome-extension/dist/
