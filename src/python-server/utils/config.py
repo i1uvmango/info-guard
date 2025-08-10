@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     """애플리케이션 설정"""
     
     # YouTube API 설정
-    YOUTUBE_API_KEY: Optional[str] = Field(default="", env="YOUTUBE_API_KEY")
+    YOUTUBE_API_KEY: Optional[str] = Field(default="", env="YOUTUBE_API_KEY", description="YouTube API 키 (로그에 출력되지 않음)")
     
     # 데이터베이스 설정
     DATABASE_URL: str = Field(

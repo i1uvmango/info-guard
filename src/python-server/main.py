@@ -13,6 +13,7 @@ from contextlib import asynccontextmanager
 from api.routers import health, analysis, websocket
 from utils.config import settings
 from utils.logger import setup_logging
+from utils.security import setup_secure_logging
 
 
 @asynccontextmanager
@@ -72,6 +73,9 @@ app = create_app()
 
 
 if __name__ == "__main__":
+    # 보안 로깅 설정 (API 키 마스킹 등)
+    setup_secure_logging()
+    
     # 로깅 설정
     setup_logging()
     

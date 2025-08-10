@@ -71,7 +71,7 @@ pip install sentence-transformers
 cp env.example .env
 
 # YouTube API 키 설정
-echo "YOUTUBE_API_KEY=AIzaSyC8_h83XbrUYo-jJJGdgHzJbZLoVaKJcd4" >> .env
+echo "YOUTUBE_API_KEY=your_youtube_api_key_here" >> .env
 
 # CUDA 설정 (RTX 4060Ti 최적화)
 echo "CUDA_VISIBLE_DEVICES=0" >> .env

@@ -19,6 +19,7 @@ from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_transcript_api.formatters import TextFormatter
 
 from utils.config import settings
+from utils.security import mask_api_key, secure_logging
 
 
 class YouTubeClient:
@@ -55,7 +56,7 @@ class YouTubeClient:
         
         # 설정 파일에서 확인
         if hasattr(settings, 'YOUTUBE_API_KEY') and settings.YOUTUBE_API_KEY:
-            return settings.YOUTUBE_API_KEY
+            return settings.YOUTUBE_KEY
         
         # 기본 설정 파일에서 확인
         try:
@@ -64,6 +65,7 @@ class YouTubeClient:
         except ImportError:
             pass
         
+        # API 키가 없을 때만 경고 (키 자체는 로그에 출력하지 않음)
         self.logger.warning("YouTube API 키를 찾을 수 없습니다. 환경변수 YOUTUBE_API_KEY를 설정하세요.")
         return ""
     
@@ -478,7 +480,7 @@ class YouTubeClient:
         return []
     
     def get_quota_status(self) -> Dict:
-        """할당량 상태 조회"""
+        """할당량 상태 조회 (API 키는 마스킹)"""
         return {
             'quota_used': self.quota_used,
             'quota_limit': self.quota_limit,
@@ -486,7 +488,8 @@ class YouTubeClient:
             'request_count': self.request_count,
             'api_keys_available': len(self.api_keys),
             'current_key_index': self.current_key_index,
-            'last_request_time': datetime.fromtimestamp(self.last_request_time).isoformat() if self.last_request_time else None
+            'last_request_time': datetime.fromtimestamp(self.last_request_time).isoformat() if self.last_request_time else None,
+            'api_key_status': 'configured' if self.api_keys else 'not_configured'
         }
     
     def reset_quota(self):
