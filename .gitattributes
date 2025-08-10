@@ -1,0 +1,86 @@
+# 줄바꿈 문자 자동 정규화
+* text=auto
+
+# 특정 파일 타입별 줄바꿈 문자 설정
+*.py text eol=lf
+*.js text eol=lf
+*.ts text eol=lf
+*.jsx text eol=lf
+*.tsx text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.scss text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+*.xml text eol=lf
+*.sh text eol=lf
+*.bash text eol=lf
+*.zsh text eol=lf
+*.fish text eol=lf
+*.ps1 text eol=lf
+*.bat text eol=lf
+*.cmd text eol=lf
+
+# 바이너리 파일 (줄바꿈 변환 안함)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.tar binary
+*.gz binary
+*.rar binary
+*.7z binary
+*.exe binary
+*.dll binary
+*.so binary
+*.dylib binary
+*.pkl binary
+*.h5 binary
+*.hdf5 binary
+*.model binary
+*.bin binary
+*.pth binary
+*.ckpt binary
+*.safetensors binary
+
+# 문서 파일
+*.md text diff=markdown
+*.rst text diff=rst
+*.txt text
+
+# 설정 파일
+*.ini text
+*.cfg text
+*.conf text
+*.env text
+*.env.example text
+*.env.local text
+*.env.development text
+*.env.test text
+*.env.production text
+
+# 스크립트 파일
+*.sh text eol=lf executable
+*.bash text eol=lf executable
+*.zsh text eol=lf executable
+*.fish text eol=lf executable
+*.ps1 text eol=crlf executable
+*.bat text eol=crlf executable
+*.cmd text eol=crlf executable
+
+# Docker 파일
+Dockerfile text eol=lf
+docker-compose.yml text eol=lf
+docker-compose.yaml text eol=lf
+.dockerignore text eol=lf
+
+# Git 관련
+.gitignore text eol=lf
+.gitattributes text eol=lf
+.gitmodules text eol=lf

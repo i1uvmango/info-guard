@@ -1,0 +1,388 @@
+/**
+ * Info-Guard Chrome Extension Popup CSS
+ * YouTube 영상 신뢰도 분석을 위한 팝업 스타일
+ */
+
+/* 기본 리셋 및 폰트 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #333;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+
+/* 컨테이너 */
+.container {
+    width: 380px;
+    min-height: 500px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    position: relative;
+}
+
+/* 헤더 */
+.header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.logo-icon {
+    width: 32px;
+    height: 32px;
+    margin-right: 10px;
+    filter: brightness(0) invert(1);
+}
+
+.logo-text {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.subtitle {
+    font-size: 14px;
+    opacity: 0.9;
+    margin: 0;
+}
+
+/* 메인 콘텐츠 */
+.main-content {
+    padding: 20px;
+}
+
+/* 영상 정보 */
+.video-info {
+    margin-bottom: 20px;
+}
+
+.loading-spinner {
+    text-align: center;
+    padding: 30px 0;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.video-details {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.video-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #2c3e50;
+    line-height: 1.4;
+}
+
+.credibility-score {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.score-label {
+    font-weight: 500;
+    color: #666;
+}
+
+.score-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #667eea;
+}
+
+.score-grade {
+    font-size: 12px;
+    color: #666;
+    background: #e9ecef;
+    padding: 4px 8px;
+    border-radius: 12px;
+}
+
+/* 분석 결과 */
+.analysis-results {
+    margin-bottom: 20px;
+}
+
+.result-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    gap: 10px;
+}
+
+.result-item .label {
+    min-width: 80px;
+    font-weight: 500;
+    color: #666;
+    font-size: 13px;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 8px;
+    background: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #667eea;
+    border-radius: 4px;
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.result-item .value {
+    min-width: 40px;
+    text-align: right;
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 13px;
+}
+
+/* 설명 */
+.explanation {
+    background: #e8f4fd;
+    border-left: 4px solid #667eea;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 0 8px 8px 0;
+}
+
+.explanation h4 {
+    color: #2c3e50;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.explanation p {
+    color: #555;
+    font-size: 13px;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* 피드백 */
+.feedback-section {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.feedback-section h4 {
+    color: #2c3e50;
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+
+.feedback-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.feedback-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.feedback-btn.positive {
+    background: #28a745;
+    color: white;
+}
+
+.feedback-btn.positive:hover {
+    background: #218838;
+    transform: translateY(-1px);
+}
+
+.feedback-btn.negative {
+    background: #dc3545;
+    color: white;
+}
+
+.feedback-btn.negative:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+}
+
+/* 푸터 */
+.footer {
+    background: #f8f9fa;
+    padding: 15px 20px;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #28a745;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.status-text {
+    font-size: 12px;
+    color: #666;
+}
+
+.settings-btn {
+    background: none;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.settings-btn:hover {
+    background: #f8f9fa;
+    border-color: #adb5bd;
+}
+
+/* 메시지 스타일 */
+.error-message, .info-message {
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 13px;
+}
+
+.error-message {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.info-message {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 400px) {
+    .container {
+        width: 100%;
+        border-radius: 0;
+    }
+    
+    .header {
+        padding: 15px;
+    }
+    
+    .main-content {
+        padding: 15px;
+    }
+    
+    .result-item .label {
+        min-width: 70px;
+        font-size: 12px;
+    }
+}
+
+/* 애니메이션 */
+.video-details,
+.analysis-results,
+.explanation,
+.feedback-section {
+    opacity: 0;
+    transform: translateY(10px);
+    animation: fadeInUp 0.5s ease forwards;
+}
+
+.video-details { animation-delay: 0.1s; }
+.analysis-results { animation-delay: 0.2s; }
+.explanation { animation-delay: 0.3s; }
+.feedback-section { animation-delay: 0.4s; }
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 호버 효과 */
+.result-item:hover {
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 5px;
+    margin: -5px -5px 10px -5px;
+}
+
+/* 스크롤바 스타일링 */
+.container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}

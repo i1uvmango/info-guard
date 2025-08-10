@@ -48,7 +48,7 @@ svgo -i icon.svg -o icon-optimized.svg
 ### 2.3 API 키 테스트
 ```bash
 # API 키 유효성 테스트
-curl "https://www.googleapis.com/youtube/v3/videos?id=dQw4w9WgXcQ&key=AIzaSyC8_h83XbrUYo-jJJGdgHzJbZLoVaKJcd4"
+curl "https://www.googleapis.com/youtube/v3/videos?id=dQw4w9WgXcQ&key=YOUR_API_KEY_HERE"
 ```
 
 ## 3. 환경 변수 설정

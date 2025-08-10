@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model AnalysisResult {
+  id                BigInt    @id @default(autoincrement())
+  videoId           String    @map("video_id") @db.VarChar(20)
+  videoUrl          String    @map("video_url")
+  channelId         String?   @map("channel_id") @db.VarChar(50)
+  channelName       String?   @map("channel_name") @db.VarChar(200)
+  videoTitle        String?   @map("video_title") @db.VarChar(500)
+  credibilityScore  Decimal   @map("credibility_score") @db.Decimal(5,2)
+  credibilityGrade  String    @map("credibility_grade") @db.VarChar(10)
+  biasScore         Decimal   @map("bias_score") @db.Decimal(5,2)
+  factCheckScore    Decimal   @map("fact_check_score") @db.Decimal(5,2)
+  sourceScore       Decimal   @map("source_score") @db.Decimal(5,2)
+  sentimentScore    Decimal   @map("sentiment_score") @db.Decimal(5,2)
+  analysisBreakdown Json?     @map("analysis_breakdown")
+  explanation       String?
+  confidenceScore   Decimal   @map("confidence_score") @db.Decimal(5,2)
+  processingTimeMs  Int?      @map("processing_time_ms")
+  modelVersion      String?   @map("model_version") @db.VarChar(20)
+  analysisTimestamp DateTime  @map("analysis_timestamp") @default(now())
+  createdAt         DateTime  @map("created_at") @default(now())
+  updatedAt         DateTime  @map("updated_at") @default(now())
+  
+  userFeedbacks     UserFeedback[]
+  
+  @@map("analysis_results")
+  @@unique([videoId, analysisTimestamp])
+  @@index([videoId])
+  @@index([analysisTimestamp])
+  @@index([credibilityScore])
+  @@index([channelId])
+}
+
+model UserFeedback {
+  id                BigInt    @id @default(autoincrement())
+  analysisResultId  BigInt    @map("analysis_result_id")
+  userId            String?   @map("user_id") @db.VarChar(50)
+  sessionId         String?   @map("session_id") @db.VarChar(100)
+  feedbackType      String    @map("feedback_type") @db.VarChar(20)
+  feedbackText      String?
+  feedbackScore     Int?      @map("feedback_score")
+  createdAt         DateTime  @map("created_at") @default(now())
+  
+  analysisResult    AnalysisResult @relation(fields: [analysisResultId], references: [id], onDelete: Cascade)
+  
+  @@map("user_feedback")
+  @@unique([analysisResultId, userId, feedbackType])
+  @@index([analysisResultId])
+  @@index([feedbackType])
+}
+
+model Channel {
+  id                      BigInt    @id @default(autoincrement())
+  channelId               String    @unique @map("channel_id") @db.VarChar(50)
+  channelName             String    @map("channel_name") @db.VarChar(200)
+  channelUrl              String?   @map("channel_url")
+  subscriberCount         Int?      @map("subscriber_count")
+  videoCount              Int?      @map("video_count")
+  viewCount               BigInt?   @map("view_count")
+  averageCredibilityScore Decimal?  @map("average_credibility_score") @db.Decimal(5,2)
+  totalAnalyses           Int       @map("total_analyses") @default(0)
+  createdAt               DateTime  @map("created_at") @default(now())
+  updatedAt               DateTime  @map("updated_at") @default(now())
+  
+  @@map("channels")
+  @@index([channelId])
+  @@index([averageCredibilityScore])
+} 
