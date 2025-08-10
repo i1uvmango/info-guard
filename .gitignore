@@ -444,6 +444,8 @@ src/python-server/.env.*
 # Node.js dependencies
 src/nodejs-server/node_modules/
 src/chrome-extension/node_modules/
+src/nodejs-server/package-lock.json
+src/chrome-extension/package-lock.json
 
 # Build artifacts
 src/python-server/build/
