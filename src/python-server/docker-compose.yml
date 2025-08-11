@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  python-server:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
+      - HOST=0.0.0.0
+      - PORT=8000
+    volumes:
+      - .:/app
+      - ./models:/app/models
+    depends_on:
+      - redis
+    networks:
+      - info-guard-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - info-guard-network
+    restart: unless-stopped
+
+  # 개발용 데이터베이스 (선택사항)
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=infoguard
+      - POSTGRES_USER=infoguard
+      - POSTGRES_PASSWORD=infoguard123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - info-guard-network
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+  postgres_data:
+
+networks:
+  info-guard-network:
+    driver: bridge

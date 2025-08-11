@@ -1,304 +1,187 @@
-# Info-Guard Python AI Server
+# Info-Guard Python Server
 
-RTX 4060Ti 16GB에 최적화된 AI 기반 YouTube 영상 신뢰성 분석 서버입니다.
+YouTube 영상 신뢰도 분석을 위한 AI 기반 백엔드 서비스입니다.
 
 ## 🚀 주요 기능
 
-- **AI 기반 신뢰성 분석**: 감정 분석, 편향 감지, 사실 확인, 출처 검증
-- **YouTube API 연동**: 영상 정보 및 자막 자동 수집
-- **실시간 분석**: WebSocket을 통한 실시간 분석 결과 전송
-- **CUDA 최적화**: RTX 4060Ti 16GB에 최적화된 GPU 가속
-- **모델 학습**: 커스텀 데이터셋을 통한 모델 파인튜닝
+- **YouTube 영상 분석**: 감정 분석, 편향 감지, 신뢰도 분석, 콘텐츠 분류
+- **실시간 진행상황**: WebSocket을 통한 분석 진행상황 실시간 모니터링
+- **AI 모델 통합**: RTX 4060Ti GPU 최적화된 AI 모델 실행
+- **RESTful API**: FastAPI 기반의 현대적이고 빠른 API
+- **비동기 처리**: 백그라운드에서 분석 작업 처리
 
-## 🛠️ 시스템 요구사항
+## 🏗️ 아키텍처
 
-### 하드웨어
-- **GPU**: NVIDIA RTX 4060Ti 16GB 이상
-- **RAM**: 32GB 이상 권장
-- **저장공간**: 50GB 이상 (모델 캐시 포함)
+```
+src/python-server/
+├── main.py                    # 메인 서버 진입점
+├── app/                       # 애플리케이션 핵심
+│   ├── core/                  # 핵심 설정 및 유틸리티
+│   ├── api/                   # API 레이어
+│   ├── models/                # 데이터 모델
+│   ├── services/              # 비즈니스 로직
+│   ├── ai/                    # AI 모델
+│   └── utils/                 # 유틸리티
+├── tests/                     # 테스트 코드
+├── test_services.py           # 서비스 테스트 스크립트
+└── requirements.txt           # 의존성 패키지
+```
 
-### 소프트웨어
-- **OS**: Ubuntu 20.04+ / Windows 11 / macOS 13+
-- **Python**: 3.9+ (3.11 권장)
-- **CUDA**: 12.1+ (PyTorch 호환 버전)
-- **cuDNN**: 8.9+ (CUDA 12.1 호환)
+## 🛠️ 기술 스택
 
-## 📦 설치 방법
+- **Backend**: FastAPI, Uvicorn
+- **AI/ML**: scikit-learn, transformers, PyTorch
+- **데이터베이스**: PostgreSQL, Redis
+- **비동기 처리**: asyncio, BackgroundTasks
+- **실시간 통신**: WebSocket
 
-### 1. 환경 설정
+## 📋 요구사항
 
+- Python 3.11+
+- RTX 4060Ti 16GB (GPU 가속)
+- Docker & Docker Compose
+- 8GB+ RAM
+- 20GB+ 저장공간
+
+## 🚀 빠른 시작
+
+### 1. 저장소 클론
+```bash
+git clone <repository-url>
+cd info-guard/src/python-server
+```
+
+### 2. 환경 변수 설정
+```bash
+cp env.example .env
+# .env 파일을 편집하여 필요한 설정값 입력
+```
+
+### 3. Docker로 실행
+```bash
+docker-compose up -d
+```
+
+### 4. 로컬 개발 환경
 ```bash
 # 가상환경 생성
-python -m venv info-guard-env
-source info-guard-env/bin/activate  # Linux/macOS
-# 또는
-info-guard-env\Scripts\activate     # Windows
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
-# Python 버전 확인 (3.9+ 필요)
-python --version
-```
+# 의존성 설치
+pip install -r requirements-dev.txt
 
-### 2. CUDA 설치 확인
-
-```bash
-# CUDA 버전 확인
-nvidia-smi
-nvcc --version
-
-# PyTorch CUDA 지원 확인
-python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}'); print(f'CUDA version: {torch.version.cuda}')"
-```
-
-### 3. 의존성 설치
-
-```bash
-# 기본 의존성 설치
-pip install -r requirements.txt
-
-# 또는 단계별 설치 (권장)
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
-pip install transformers datasets accelerate
-pip install fastapi uvicorn
-pip install google-api-python-client youtube-transcript-api
-pip install scikit-learn numpy pandas
-pip install sentence-transformers
-```
-
-### 4. 환경 변수 설정
-
-```bash
-# .env 파일 복사
-cp env.example .env
-
-# YouTube API 키 설정
-echo "YOUTUBE_API_KEY=your_youtube_api_key_here" >> .env
-
-# CUDA 설정 (RTX 4060Ti 최적화)
-echo "CUDA_VISIBLE_DEVICES=0" >> .env
-echo "MAX_MEMORY_MB=14000" >> .env
-echo "MIXED_PRECISION=true" >> .env
-echo "GRADIENT_CHECKPOINTING=true" >> .env
-```
-
-## 🔧 설정 최적화
-
-### CUDA 메모리 최적화
-
-```python
-# utils/config.py에서 설정 조정
-MAX_MEMORY_MB = 14000        # 16GB - 2GB 여유
-TRAINING_BATCH_SIZE = 4      # RTX 4060Ti에 최적화
-INFERENCE_BATCH_SIZE = 8     # 추론 시 더 큰 배치
-GRADIENT_ACCUMULATION_STEPS = 4  # 메모리 절약
-```
-
-### 모델 로딩 전략
-
-```python
-# 자동 디바이스 매핑 (권장)
-DEVICE_MAP = "auto"
-LOW_CPU_MEM_USAGE = True
-
-# 또는 수동 설정
-DEVICE_MAP = None  # 수동으로 GPU에 로드
-```
-
-## 🚀 실행 방법
-
-### 1. 개발 모드 실행
-
-```bash
 # 서버 실행
 python main.py
-
-# 또는 uvicorn 직접 실행
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### 2. 프로덕션 모드 실행
+## 🧪 서비스 테스트
+
+서비스들이 제대로 작동하는지 확인하려면:
 
 ```bash
-# Gunicorn 사용 (Linux/macOS)
-pip install gunicorn
-gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
+# 전체 서비스 테스트
+python test_services.py
 
-# Windows
-waitress-serve main:app --host=0.0.0.0 --port=8000
+# 개별 테스트
+python -m pytest tests/
 ```
 
-### 3. Docker 실행
+테스트는 다음을 확인합니다:
+- ✅ 캐시 서비스 (Redis 연결 및 기본 작업)
+- ✅ AI 모델 서비스 (모델 상태 및 분석 기능)
+- ✅ YouTube 서비스 (API 연결 및 기본 기능)
 
-```bash
-# Docker Compose 사용
-cd ../docker
-docker-compose up python-server
+## 📚 API 문서
 
-# 또는 개별 실행
-docker build -t info-guard-python .
-docker run -p 8000:8000 --gpus all info-guard-python
-```
+서버 실행 후 다음 URL에서 API 문서를 확인할 수 있습니다:
 
-## 🧠 AI 모델 학습
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+- **OpenAPI JSON**: http://localhost:8000/openapi.json
 
-### 1. 데이터 준비
+## 🔌 주요 API 엔드포인트
 
-```bash
-# 학습 데이터 형식
-{
-    "text": "분석할 텍스트",
-    "label": "positive|neutral|negative"  # 감정 분석
-    "bias_label": "biased|neutral"        # 편향 감지
-}
-```
+### 분석 API
+- `POST /api/v1/analysis/analyze` - 영상 분석 요청
+- `GET /api/v1/analysis/status/{id}` - 분석 상태 조회
+- `GET /api/v1/analysis/result/{id}` - 분석 결과 조회
+- `DELETE /api/v1/analysis/{id}` - 분석 취소
 
-### 2. 모델 학습 실행
+### WebSocket
+- `WS /ws/analysis/{user_id}` - 실시간 분석 구독
 
-```bash
-# 감정 분석 모델 학습
-python scripts/train_models.py --model sentiment --data-path ./data/sentiment_data.json
-
-# 편향 감지 모델 학습
-python scripts/train_models.py --model bias --data-path ./data/bias_data.json
-
-# 모든 모델 학습
-python scripts/train_models.py --model all --data-path ./data/
-```
-
-### 3. 학습 모니터링
-
-```bash
-# TensorBoard 실행
-tensorboard --logdir ./training_outputs
-
-# 메모리 사용량 확인
-python -c "from ai_models.model_loader import model_loader; print(model_loader.get_memory_usage())"
-```
-
-## 📊 API 엔드포인트
-
-### 기본 엔드포인트
-
-- `GET /health`: 서버 상태 확인
-- `POST /analysis`: 영상 신뢰성 분석
-- `GET /analysis/{video_id}`: 분석 결과 조회
-- `WebSocket /ws`: 실시간 분석 진행 상황
-
-### 분석 요청 예시
-
-```python
-import requests
-
-# 분석 요청
-response = requests.post("http://localhost:8000/analysis", json={
-    "video_url": "https://www.youtube.com/watch?v=VIDEO_ID",
-    "analysis_type": "full",  # full, quick, custom
-    "include_transcript": True,
-    "include_comments": False
-})
-
-print(response.json())
-```
-
-## 🔍 문제 해결
-
-### CUDA 메모리 부족
-
-```bash
-# 배치 크기 줄이기
-echo "TRAINING_BATCH_SIZE=2" >> .env
-echo "INFERENCE_BATCH_SIZE=4" >> .env
-
-# 그래디언트 체크포인팅 활성화
-echo "GRADIENT_CHECKPOINTING=true" >> .env
-
-# 메모리 정리
-python -c "import torch; torch.cuda.empty_cache()"
-```
-
-### 모델 로딩 실패
-
-```bash
-# 캐시 정리
-rm -rf ./ai_models/cache/*
-
-# 모델 재다운로드
-python -c "from ai_models.model_loader import model_loader; model_loader.cleanup()"
-```
-
-### YouTube API 제한
-
-```bash
-# API 제한 설정 조정
-echo "MAX_REQUESTS_PER_MINUTE=50" >> .env
-echo "MAX_CONCURRENT_REQUESTS=5" >> .env
-```
-
-## 📈 성능 최적화
-
-### RTX 4060Ti 특화 설정
-
-```python
-# utils/config.py
-TORCH_CUDA_ARCH_LIST = "8.9"  # RTX 4060Ti 아키텍처
-MAX_MEMORY_MB = 14000         # 16GB 최적화
-MIXED_PRECISION = True         # FP16 사용
-GRADIENT_CHECKPOINTING = True  # 메모리 절약
-```
-
-### 배치 처리 최적화
-
-```python
-# 학습 시
-TRAINING_BATCH_SIZE = 4
-GRADIENT_ACCUMULATION_STEPS = 4
-
-# 추론 시
-INFERENCE_BATCH_SIZE = 8
-```
+### 헬스체크
+- `GET /api/v1/health` - 기본 헬스체크
+- `GET /api/v1/health/detailed` - 상세 헬스체크
+- `GET /api/v1/health/ready` - 서비스 준비 상태
 
 ## 🧪 테스트
 
-### 단위 테스트
-
 ```bash
-# 모든 테스트 실행
+# 단위 테스트 실행
 pytest
 
-# 특정 모듈 테스트
-pytest tests/test_credibility_analyzer.py
+# 커버리지 포함 테스트
+pytest --cov=app
 
-# 커버리지 포함
-pytest --cov=src/python_server
+# 특정 테스트 파일 실행
+pytest tests/test_api/test_analysis.py
 ```
 
-### 통합 테스트
+## 🔧 개발 도구
 
 ```bash
-# API 테스트
-python -m pytest tests/test_api.py
+# 코드 포맷팅
+black app/ tests/
 
-# 모델 테스트
-python -m pytest tests/test_models.py
+# 코드 정렬
+isort app/ tests/
+
+# 린팅
+flake8 app/ tests/
+
+# 타입 체크
+mypy app/
 ```
 
-## 📚 추가 리소스
+## 📊 모니터링
 
-- [PyTorch CUDA 가이드](https://pytorch.org/docs/stable/notes/cuda.html)
-- [Transformers 최적화](https://huggingface.co/docs/transformers/performance)
-- [RTX 4060Ti 성능 가이드](https://www.nvidia.com/en-us/geforce/graphics-cards/rtx-4060-ti/)
+- **로그**: 구조화된 로깅 시스템
+- **헬스체크**: 서비스 상태 모니터링
+- **메트릭**: 성능 및 사용량 지표
 
-## 🤝 기여하기
+## 🚀 배포
+
+### Docker 이미지 빌드
+```bash
+docker build -t info-guard-python-server .
+```
+
+### 프로덕션 실행
+```bash
+docker run -d \
+  -p 8000:8000 \
+  --env-file .env \
+  info-guard-python-server
+```
+
+## 🤝 기여
 
 1. Fork the repository
 2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+3. Make your changes
+4. Add tests
+5. Submit a pull request
 
 ## 📄 라이선스
 
 이 프로젝트는 MIT 라이선스 하에 배포됩니다.
 
-## 📞 지원
+## 🆘 지원
 
-문제가 발생하거나 질문이 있으시면 이슈를 생성해주세요.
+문제가 발생하거나 질문이 있으시면 이슈를 생성해 주세요.
+
+---
+
+**Info-Guard Team** - AI 기반 콘텐츠 신뢰도 분석 서비스

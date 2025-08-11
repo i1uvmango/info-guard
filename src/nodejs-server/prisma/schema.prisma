@@ -7,6 +7,31 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  username  String
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Analysis {
+  id        String   @id @default(cuid())
+  videoUrl  String
+  userId    String?
+  status    String   @default("pending")
+  progress  Int      @default(0)
+  result    Json?
+  error     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("analyses")
+}
+
 model AnalysisResult {
   id                BigInt    @id @default(autoincrement())
   videoId           String    @map("video_id") @db.VarChar(20)

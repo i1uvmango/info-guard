@@ -1,570 +1,415 @@
-/**
- * Info-Guard Chrome Extension Content Script
- * YouTube 페이지에 신뢰도 분석 UI를 주입하는 스크립트
- */
+// Info-Guard Chrome Extension 콘텐츠 스크립트
+class InfoGuardContentScript {
+  constructor() {
+    this.videoId = null;
+    this.videoData = null;
+    this.analysisResult = null;
+    this.isAnalyzing = false;
+    this.overlayElement = null;
+    
+    this.init();
+  }
 
-class InfoGuardContent {
-    constructor() {
-        this.videoId = null;
-        this.analysisResult = null;
-        this.isAnalyzing = false;
-        this.analysisButton = null;
-        this.credibilityBadge = null;
-        
-        this.init();
+  async init() {
+    try {
+      // YouTube 페이지인지 확인
+      if (!this.isYouTubePage()) {
+        return;
+      }
+
+      // 비디오 ID 추출
+      this.videoId = this.extractVideoId();
+      if (!this.videoId) {
+        return;
+      }
+
+      // 비디오 메타데이터 수집
+      await this.collectVideoMetadata();
+      
+      // 메시지 리스너 등록
+      this.setupMessageListener();
+      
+      // 페이지 변경 감지
+      this.setupPageChangeDetection();
+      
+      // 초기 UI 요소 추가
+      this.addInfoGuardUI();
+      
+    } catch (error) {
+      console.error('Info-Guard 콘텐츠 스크립트 초기화 오류:', error);
     }
+  }
 
-    init() {
-        // 페이지 로드 완료 후 초기화
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', this.setup.bind(this));
-        } else {
-            this.setup();
-        }
-        
-        // 메시지 리스너 등록
-        chrome.runtime.onMessage.addListener(this.handleMessage.bind(this));
-        
-        // YouTube 페이지 변경 감지 (SPA)
-        this.observePageChanges();
-        
-        console.log('Info-Guard 콘텐츠 스크립트가 로드되었습니다.');
+  isYouTubePage() {
+    return window.location.hostname === 'www.youtube.com' || 
+           window.location.hostname === 'youtube.com';
+  }
+
+  extractVideoId() {
+    const url = window.location.href;
+    const match = url.match(/[?&]v=([^&]+)/);
+    return match ? match[1] : null;
+  }
+
+  async collectVideoMetadata() {
+    try {
+      // 비디오 제목
+      const titleElement = document.querySelector('h1.ytd-video-primary-info-renderer') ||
+                          document.querySelector('h1.title') ||
+                          document.querySelector('h1');
+      
+      const title = titleElement ? titleElement.textContent.trim() : '알 수 없는 제목';
+      
+      // 채널명
+      const channelElement = document.querySelector('a.ytd-video-owner-renderer') ||
+                            document.querySelector('.ytd-channel-name a') ||
+                            document.querySelector('.ytd-video-owner-renderer a');
+      
+      const channel = channelElement ? channelElement.textContent.trim() : '알 수 없는 채널';
+      
+      // 비디오 길이
+      const durationElement = document.querySelector('.ytp-time-duration') ||
+                              document.querySelector('.ytd-video-primary-info-renderer .ytd-video-primary-info-renderer');
+      
+      const duration = durationElement ? durationElement.textContent.trim() : '알 수 없음';
+      
+      // 조회수
+      const viewCountElement = document.querySelector('.view-count') ||
+                               document.querySelector('.ytd-video-primary-info-renderer .view-count');
+      
+      const viewCount = viewCountElement ? viewCountElement.textContent.trim() : '알 수 없음';
+      
+      // 업로드 날짜
+      const dateElement = document.querySelector('.date') ||
+                          document.querySelector('.ytd-video-primary-info-renderer .date');
+      
+      const uploadDate = dateElement ? dateElement.textContent.trim() : '알 수 없음';
+      
+      // 설명
+      const descriptionElement = document.querySelector('#description') ||
+                                 document.querySelector('.ytd-video-secondary-info-renderer #description');
+      
+      const description = descriptionElement ? descriptionElement.textContent.trim() : '';
+      
+      this.videoData = {
+        id: this.videoId,
+        title: title,
+        channel: channel,
+        duration: duration,
+        viewCount: viewCount,
+        uploadDate: uploadDate,
+        description: description,
+        url: window.location.href
+      };
+      
+      console.log('비디오 메타데이터 수집 완료:', this.videoData);
+      
+    } catch (error) {
+      console.error('비디오 메타데이터 수집 오류:', error);
+      this.videoData = {
+        id: this.videoId,
+        title: '알 수 없는 제목',
+        channel: '알 수 없는 채널',
+        duration: '알 수 없음',
+        viewCount: '알 수 없음',
+        uploadDate: '알 수 없음',
+        description: '',
+        url: window.location.href
+      };
     }
+  }
 
-    setup() {
-        try {
-            // 현재 페이지가 YouTube 영상 페이지인지 확인
-            if (this.isVideoPage()) {
-                this.videoId = this.extractVideoId();
-                if (this.videoId) {
-                    this.injectAnalysisUI();
-                    this.loadExistingAnalysis();
-                }
-            }
-        } catch (error) {
-            console.error('콘텐츠 스크립트 설정 실패:', error);
-        }
-    }
-
-    isVideoPage() {
-        return window.location.pathname === '/watch' && 
-               window.location.search.includes('v=');
-    }
-
-    extractVideoId() {
-        const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get('v');
-    }
-
-    injectAnalysisUI() {
-        try {
-            // 분석 버튼 주입
-            this.injectAnalysisButton();
-            
-            // 신뢰도 배지 주입
-            this.injectCredibilityBadge();
-            
-            // 분석 결과 패널 주입
-            this.injectAnalysisPanel();
-            
-        } catch (error) {
-            console.error('UI 주입 실패:', error);
-        }
-    }
-
-    injectAnalysisButton() {
-        try {
-            // YouTube의 액션 버튼 영역 찾기
-            const actionBar = this.findActionBar();
-            if (!actionBar) return;
-
-            // 기존 버튼이 있다면 제거
-            if (this.analysisButton) {
-                this.analysisButton.remove();
-            }
-
-            // 분석 버튼 생성
-            this.analysisButton = this.createAnalysisButton();
-            
-            // 액션 바에 삽입
-            actionBar.appendChild(this.analysisButton);
-            
-        } catch (error) {
-            console.error('분석 버튼 주입 실패:', error);
-        }
-    }
-
-    findActionBar() {
-        // 여러 가능한 위치에서 액션 바 찾기
-        const selectors = [
-            '#actions-inner',
-            '#actions',
-            '.ytd-video-primary-info-renderer #actions',
-            '.ytd-video-primary-info-renderer #actions-inner',
-            '#top-level-buttons-computed',
-            '#top-level-buttons'
-        ];
-        
-        for (const selector of selectors) {
-            const element = document.querySelector(selector);
-            if (element) return element;
-        }
-        
-        return null;
-    }
-
-    createAnalysisButton() {
-        const button = document.createElement('button');
-        button.className = 'info-guard-analysis-btn';
-        button.innerHTML = `
-            <div class="btn-content">
-                <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                </svg>
-                <span class="btn-text">신뢰도 분석</span>
-            </div>
-        `;
-        
-        // 클릭 이벤트 등록
-        button.addEventListener('click', this.handleAnalysisClick.bind(this));
-        
-        return button;
-    }
-
-    injectCredibilityBadge() {
-        try {
-            // 영상 제목 영역 찾기
-            const titleElement = this.findVideoTitle();
-            if (!titleElement) return;
-
-            // 기존 배지가 있다면 제거
-            if (this.credibilityBadge) {
-                this.credibilityBadge.remove();
-            }
-
-            // 신뢰도 배지 생성
-            this.credibilityBadge = this.createCredibilityBadge();
-            
-            // 제목 아래에 삽입
-            titleElement.parentNode.insertBefore(this.credibilityBadge, titleElement.nextSibling);
-            
-        } catch (error) {
-            console.error('신뢰도 배지 주입 실패:', error);
-        }
-    }
-
-    findVideoTitle() {
-        const selectors = [
-            'h1.ytd-video-primary-info-renderer',
-            '#video-title',
-            '.ytd-video-primary-info-renderer h1',
-            'h1.title'
-        ];
-        
-        for (const selector of selectors) {
-            const element = document.querySelector(selector);
-            if (element) return element;
-        }
-        
-        return null;
-    }
-
-    createCredibilityBadge() {
-        const badge = document.createElement('div');
-        badge.className = 'info-guard-credibility-badge';
-        badge.innerHTML = `
-            <div class="badge-content">
-                <span class="badge-icon">🛡️</span>
-                <span class="badge-text">신뢰도 분석 중...</span>
-                <span class="badge-score" id="credibilityScore">--</span>
-            </div>
-        `;
-        
-        return badge;
-    }
-
-    injectAnalysisPanel() {
-        try {
-            // 사이드바 영역 찾기
-            const sidebar = this.findSidebar();
-            if (!sidebar) return;
-
-            // 기존 패널이 있다면 제거
-            const existingPanel = document.querySelector('.info-guard-analysis-panel');
-            if (existingPanel) {
-                existingPanel.remove();
-            }
-
-            // 분석 패널 생성
-            const analysisPanel = this.createAnalysisPanel();
-            
-            // 사이드바 상단에 삽입
-            sidebar.insertBefore(analysisPanel, sidebar.firstChild);
-            
-        } catch (error) {
-            console.error('분석 패널 주입 실패:', error);
-        }
-    }
-
-    findSidebar() {
-        const selectors = [
-            '#secondary',
-            '#secondary-inner',
-            '.ytd-watch-flexy #secondary',
-            '#related'
-        ];
-        
-        for (const selector of selectors) {
-            const element = document.querySelector(selector);
-            if (element) return element;
-        }
-        
-        return null;
-    }
-
-    createAnalysisPanel() {
-        const panel = document.createElement('div');
-        panel.className = 'info-guard-analysis-panel';
-        panel.innerHTML = `
-            <div class="panel-header">
-                <h3 class="panel-title">🔍 Info-Guard 분석 결과</h3>
-                <button class="panel-close-btn" id="closePanel">×</button>
-            </div>
-            <div class="panel-content">
-                <div class="loading-message" id="loadingMessage">
-                    <div class="spinner"></div>
-                    <p>영상을 분석하고 있습니다...</p>
-                </div>
-                <div class="analysis-results" id="analysisResults" style="display: none;">
-                    <!-- 분석 결과가 여기에 표시됩니다 -->
-                </div>
-            </div>
-        `;
-        
-        // 닫기 버튼 이벤트
-        const closeBtn = panel.querySelector('#closePanel');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => {
-                panel.style.display = 'none';
-            });
-        }
-        
-        return panel;
-    }
-
-    async handleAnalysisClick() {
-        if (this.isAnalyzing) {
-            this.showMessage('이미 분석 중입니다. 잠시 기다려주세요.');
-            return;
-        }
-
-        try {
-            this.isAnalyzing = true;
-            this.updateAnalysisButton(true);
-            
-            // 백그라운드에 분석 요청
-            const response = await chrome.runtime.sendMessage({
-                type: 'ANALYZE_VIDEO',
-                videoUrl: `https://www.youtube.com/watch?v=${this.videoId}`
-            });
-
-            if (response.success) {
-                this.analysisResult = response.data;
-                this.monitorAnalysisProgress(response.data.analysis_id);
-            } else {
-                throw new Error(response.error || '분석 요청 실패');
-            }
-            
-        } catch (error) {
-            console.error('분석 요청 실패:', error);
-            this.showMessage('분석 요청에 실패했습니다. 다시 시도해주세요.');
-            this.updateAnalysisButton(false);
-            this.isAnalyzing = false;
-        }
-    }
-
-    async monitorAnalysisProgress(analysisId) {
-        try {
-            let attempts = 0;
-            const maxAttempts = 60; // 최대 5분 대기
-            
-            const checkProgress = async () => {
-                attempts++;
-                
-                const response = await chrome.runtime.sendMessage({
-                    type: 'GET_ANALYSIS_STATUS',
-                    analysisId: analysisId
-                });
-                
-                if (response.success) {
-                    const status = response.data;
-                    
-                    if (status.status === 'completed') {
-                        // 분석 완료
-                        await this.loadAnalysisResult(analysisId);
-                        return;
-                    } else if (status.status === 'failed') {
-                        throw new Error('분석이 실패했습니다.');
-                    } else if (attempts >= maxAttempts) {
-                        throw new Error('분석 시간이 초과되었습니다.');
-                    }
-                    
-                    // 진행률 업데이트
-                    this.updateProgress(status.progress || 0);
-                    
-                    // 5초 후 다시 확인
-                    setTimeout(checkProgress, 5000);
-                } else {
-                    throw new Error('분석 상태 확인 실패');
-                }
-            };
-            
-            checkProgress();
-            
-        } catch (error) {
-            console.error('분석 진행상황 모니터링 실패:', error);
-            this.showMessage('분석 진행상황을 확인할 수 없습니다.');
-            this.updateAnalysisButton(false);
-            this.isAnalyzing = false;
-        }
-    }
-
-    async loadAnalysisResult(analysisId) {
-        try {
-            const response = await chrome.runtime.sendMessage({
-                type: 'GET_ANALYSIS_RESULT',
-                analysisId: analysisId
-            });
-
-            if (response.success) {
-                this.displayAnalysisResult(response.data);
-            } else {
-                throw new Error('분석 결과를 가져올 수 없습니다.');
-            }
-            
-        } catch (error) {
-            console.error('분석 결과 로드 실패:', error);
-            this.showMessage('분석 결과를 가져올 수 없습니다.');
-        } finally {
-            this.updateAnalysisButton(false);
-            this.isAnalyzing = false;
-        }
-    }
-
-    displayAnalysisResult(result) {
-        try {
-            // 신뢰도 배지 업데이트
-            this.updateCredibilityBadge(result);
-            
-            // 분석 패널에 결과 표시
-            this.updateAnalysisPanel(result);
-            
-            // 분석 결과 저장
-            this.analysisResult = result;
-            
-        } catch (error) {
-            console.error('결과 표시 실패:', error);
-        }
-    }
-
-    updateCredibilityBadge(result) {
-        if (!this.credibilityBadge) return;
-        
-        const scoreElement = this.credibilityBadge.querySelector('#credibilityScore');
-        const textElement = this.credibilityBadge.querySelector('.badge-text');
-        
-        if (scoreElement && textElement) {
-            const score = Math.round(result.overall_credibility_score * 100);
-            scoreElement.textContent = `${score}%`;
-            
-            // 점수에 따른 색상 및 텍스트 설정
-            if (score >= 80) {
-                this.credibilityBadge.className = 'info-guard-credibility-badge high';
-                textElement.textContent = '매우 신뢰할 수 있음';
-            } else if (score >= 60) {
-                this.credibilityBadge.className = 'info-guard-credibility-badge medium';
-                textElement.textContent = '신뢰할 수 있음';
-            } else if (score >= 40) {
-                this.credibilityBadge.className = 'info-guard-credibility-badge low';
-                textElement.textContent = '보통';
-            } else {
-                this.credibilityBadge.className = 'info-guard-credibility-badge very-low';
-                textElement.textContent = '신뢰하기 어려움';
-            }
-        }
-    }
-
-    updateAnalysisPanel(result) {
-        const resultsContainer = document.querySelector('#analysisResults');
-        const loadingMessage = document.querySelector('#loadingMessage');
-        
-        if (!resultsContainer || !loadingMessage) return;
-        
-        // 로딩 메시지 숨기기
-        loadingMessage.style.display = 'none';
-        
-        // 결과 표시
-        resultsContainer.innerHTML = this.createResultsHTML(result);
-        resultsContainer.style.display = 'block';
-    }
-
-    createResultsHTML(result) {
-        return `
-            <div class="result-summary">
-                <div class="overall-score">
-                    <span class="score-label">전체 신뢰도</span>
-                    <span class="score-value">${Math.round(result.overall_credibility_score * 100)}%</span>
-                </div>
-            </div>
-            
-            <div class="result-details">
-                <div class="detail-item">
-                    <span class="detail-label">편향성</span>
-                    <div class="detail-bar">
-                        <div class="detail-fill" style="width: ${Math.round((1 - result.results.bias?.total_bias_score || 0) * 100)}%"></div>
-                    </div>
-                    <span class="detail-value">${Math.round((1 - (result.results.bias?.total_bias_score || 0)) * 100)}%</span>
-                </div>
-                
-                <div class="detail-item">
-                    <span class="detail-label">사실 확인</span>
-                    <div class="detail-bar">
-                        <div class="detail-fill" style="width: ${Math.round((result.results.credibility?.credibility_score || 0) * 100)}%"></div>
-                    </div>
-                    <span class="detail-value">${Math.round((result.results.credibility?.credibility_score || 0) * 100)}%</span>
-                </div>
-                
-                <div class="detail-item">
-                    <span class="detail-label">감정 분석</span>
-                    <div class="detail-bar">
-                        <div class="detail-fill" style="width: ${Math.round((result.results.sentiment?.neutral_score || 0) / 10)}%"></div>
-                    </div>
-                    <span class="detail-value">${result.results.sentiment?.label || 'N/A'}</span>
-                </div>
-            </div>
-            
-            <div class="result-explanation">
-                <p>${this.generateExplanation(result)}</p>
-            </div>
-        `;
-    }
-
-    generateExplanation(result) {
-        let explanation = '이 영상은 ';
-        
-        if (result.results.credibility?.label === 'highly_reliable') {
-            explanation += '높은 신뢰도를 보입니다. ';
-        } else if (result.results.credibility?.label === 'reliable') {
-            explanation += '적당한 신뢰도를 보입니다. ';
-        } else {
-            explanation += '낮은 신뢰도를 보입니다. ';
-        }
-        
-        if (result.results.bias?.total_bias_score < 0.3) {
-            explanation += '편향성이 낮아 객관적입니다. ';
-        } else {
-            explanation += '편향성이 있을 수 있으니 주의가 필요합니다. ';
-        }
-        
-        return explanation;
-    }
-
-    updateAnalysisButton(analyzing) {
-        if (!this.analysisButton) return;
-        
-        if (analyzing) {
-            this.analysisButton.disabled = true;
-            this.analysisButton.querySelector('.btn-text').textContent = '분석 중...';
-            this.analysisButton.classList.add('analyzing');
-        } else {
-            this.analysisButton.disabled = false;
-            this.analysisButton.querySelector('.btn-text').textContent = '신뢰도 분석';
-            this.analysisButton.classList.remove('analyzing');
-        }
-    }
-
-    updateProgress(progress) {
-        // 진행률 표시 (선택사항)
-        console.log(`분석 진행률: ${progress}%`);
-    }
-
-    async loadExistingAnalysis() {
-        try {
-            // 로컬 스토리지에서 기존 분석 결과 확인
-            const result = await chrome.storage.local.get(`analysis_${this.videoId}`);
-            if (result[`analysis_${this.videoId}`]) {
-                this.analysisResult = result[`analysis_${this.videoId}`];
-                this.displayAnalysisResult(this.analysisResult);
-            }
-        } catch (error) {
-            console.error('기존 분석 결과 로드 실패:', error);
-        }
-    }
-
-    handleMessage(request, sender, sendResponse) {
-        try {
-            switch (request.type) {
-                case 'INJECT_ANALYSIS_BUTTON':
-                    this.injectAnalysisUI();
-                    break;
-                    
-                default:
-                    // 알 수 없는 메시지 타입
-                    break;
-            }
-        } catch (error) {
-            console.error('메시지 처리 실패:', error);
-        }
-    }
-
-    observePageChanges() {
-        // YouTube SPA 페이지 변경 감지
-        let currentUrl = window.location.href;
-        
-        const observer = new MutationObserver(() => {
-            if (window.location.href !== currentUrl) {
-                currentUrl = window.location.href;
-                
-                // URL 변경 시 UI 재설정
-                setTimeout(() => {
-                    this.setup();
-                }, 1000);
-            }
+  setupMessageListener() {
+    // 팝업에서 오는 메시지 처리
+    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+      if (request.action === 'getVideoMetadata') {
+        sendResponse({
+          success: true,
+          data: this.videoData
         });
-        
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
+        return true;
+      }
+      
+      if (request.action === 'analyzeVideo') {
+        this.startAnalysis().then(result => {
+          sendResponse({
+            success: true,
+            data: result
+          });
+        }).catch(error => {
+          sendResponse({
+            success: false,
+            error: error.message
+          });
         });
-    }
+        return true;
+      }
+    });
+  }
 
-    showMessage(message) {
-        // 간단한 메시지 표시
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'info-guard-message';
-        messageDiv.textContent = message;
-        messageDiv.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #333;
-            color: white;
-            padding: 10px 15px;
-            border-radius: 5px;
-            z-index: 10000;
-            font-size: 14px;
-        `;
-        
-        document.body.appendChild(messageDiv);
-        
-        // 3초 후 자동 제거
-        setTimeout(() => {
-            if (messageDiv.parentNode) {
-                messageDiv.parentNode.removeChild(messageDiv);
-            }
-        }, 3000);
+  setupPageChangeDetection() {
+    // YouTube SPA 페이지 변경 감지
+    let currentUrl = window.location.href;
+    
+    const observer = new MutationObserver(() => {
+      if (window.location.href !== currentUrl) {
+        currentUrl = window.location.href;
+        this.handlePageChange();
+      }
+    });
+    
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+    
+    // URL 변경 감지 (SPA 네비게이션)
+    window.addEventListener('popstate', () => {
+      this.handlePageChange();
+    });
+  }
+
+  async handlePageChange() {
+    // 기존 UI 요소 제거
+    this.removeInfoGuardUI();
+    
+    // 새로운 비디오 ID 확인
+    const newVideoId = this.extractVideoId();
+    
+    if (newVideoId && newVideoId !== this.videoId) {
+      this.videoId = newVideoId;
+      this.analysisResult = null;
+      this.isAnalyzing = false;
+      
+      // 새로운 비디오 메타데이터 수집
+      await this.collectVideoMetadata();
+      
+      // 새로운 UI 요소 추가
+      this.addInfoGuardUI();
     }
+  }
+
+  addInfoGuardUI() {
+    try {
+      // 기존 UI 제거
+      this.removeInfoGuardUI();
+      
+      // 비디오 제목 아래에 Info-Guard 오버레이 추가
+      const titleContainer = document.querySelector('h1.ytd-video-primary-info-renderer') ||
+                            document.querySelector('h1.title') ||
+                            document.querySelector('h1');
+      
+      if (titleContainer) {
+        this.overlayElement = this.createInfoGuardOverlay();
+        titleContainer.parentNode.insertBefore(this.overlayElement, titleContainer.nextSibling);
+      }
+      
+    } catch (error) {
+      console.error('Info-Guard UI 추가 오류:', error);
+    }
+  }
+
+  createInfoGuardOverlay() {
+    const overlay = document.createElement('div');
+    overlay.className = 'info-guard-overlay';
+    overlay.innerHTML = `
+      <div class="info-guard-container">
+        <div class="info-guard-header">
+          <span class="info-guard-logo">🛡️ Info-Guard</span>
+          <span class="info-guard-status" id="info-guard-status">분석 준비됨</span>
+        </div>
+        
+        <div class="info-guard-content">
+          <div class="credibility-display" id="credibility-display">
+            <div class="credibility-score" id="credibility-score">--</div>
+            <div class="credibility-label">신뢰도 점수</div>
+          </div>
+          
+          <div class="analysis-button-container">
+            <button class="analyze-button" id="analyze-button">
+              <span class="button-text">영상 분석하기</span>
+              <span class="button-icon">🔍</span>
+            </button>
+          </div>
+          
+          <div class="analysis-details" id="analysis-details" style="display: none;">
+            <div class="detail-item">
+              <span class="detail-label">편향성:</span>
+              <span class="detail-value" id="bias-value">--</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">감정:</span>
+              <span class="detail-value" id="sentiment-value">--</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">품질:</span>
+              <span class="detail-value" id="quality-value">--</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="info-guard-footer">
+          <a href="#" class="info-guard-link" id="info-guard-link">자세한 분석 보기</a>
+        </div>
+      </div>
+    `;
+    
+    // 이벤트 리스너 등록
+    this.bindOverlayEvents(overlay);
+    
+    return overlay;
+  }
+
+  bindOverlayEvents(overlay) {
+    // 분석 버튼 클릭 이벤트
+    const analyzeButton = overlay.querySelector('#analyze-button');
+    if (analyzeButton) {
+      analyzeButton.addEventListener('click', () => {
+        this.startAnalysis();
+      });
+    }
+    
+    // 자세한 분석 링크 클릭 이벤트
+    const detailLink = overlay.querySelector('#info-guard-link');
+    if (detailLink) {
+      detailLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.openDetailedAnalysis();
+      });
+    }
+  }
+
+  async startAnalysis() {
+    if (this.isAnalyzing) {
+      return;
+    }
+    
+    try {
+      this.isAnalyzing = true;
+      this.updateAnalysisUI('분석 중...', 'analyzing');
+      
+      // 백그라운드 스크립트를 통해 분석 요청
+      const response = await chrome.runtime.sendMessage({
+        action: 'analyzeVideo',
+        videoId: this.videoId,
+        videoData: this.videoData
+      });
+      
+      if (response && response.success) {
+        this.analysisResult = response.data;
+        this.displayAnalysisResult(response.data);
+        this.updateAnalysisUI('분석 완료', 'completed');
+      } else {
+        throw new Error(response?.error || '분석에 실패했습니다.');
+      }
+      
+    } catch (error) {
+      console.error('분석 오류:', error);
+      this.updateAnalysisUI('분석 실패', 'error');
+      this.showAnalysisError(error.message);
+    } finally {
+      this.isAnalyzing = false;
+    }
+  }
+
+  updateAnalysisUI(status, state) {
+    const statusElement = document.getElementById('info-guard-status');
+    const analyzeButton = document.getElementById('analyze-button');
+    
+    if (statusElement) {
+      statusElement.textContent = status;
+      statusElement.className = `info-guard-status ${state}`;
+    }
+    
+    if (analyzeButton) {
+      if (state === 'analyzing') {
+        analyzeButton.disabled = true;
+        analyzeButton.querySelector('.button-text').textContent = '분석 중...';
+        analyzeButton.querySelector('.button-icon').textContent = '⏳';
+      } else {
+        analyzeButton.disabled = false;
+        analyzeButton.querySelector('.button-text').textContent = '영상 분석하기';
+        analyzeButton.querySelector('.button-icon').textContent = '🔍';
+      }
+    }
+  }
+
+  displayAnalysisResult(results) {
+    // 신뢰도 점수 표시
+    const credibilityScore = document.getElementById('credibility-score');
+    if (credibilityScore) {
+      credibilityScore.textContent = results.credibility_score || '--';
+      credibilityScore.className = `credibility-score ${this.getScoreClass(results.credibility_score)}`;
+    }
+    
+    // 상세 분석 결과 표시
+    const analysisDetails = document.getElementById('analysis-details');
+    if (analysisDetails) {
+      const biasValue = document.getElementById('bias-value');
+      const sentimentValue = document.getElementById('sentiment-value');
+      const qualityValue = document.getElementById('quality-value');
+      
+      if (biasValue) biasValue.textContent = results.bias_score || '--';
+      if (sentimentValue) sentimentValue.textContent = results.sentiment_score || '--';
+      if (qualityValue) qualityValue.textContent = results.content_quality || '--';
+      
+      analysisDetails.style.display = 'block';
+    }
+  }
+
+  getScoreClass(score) {
+    if (!score) return 'unknown';
+    if (score >= 80) return 'excellent';
+    if (score >= 60) return 'good';
+    if (score >= 40) return 'fair';
+    return 'poor';
+  }
+
+  showAnalysisError(message) {
+    const analysisDetails = document.getElementById('analysis-details');
+    if (analysisDetails) {
+      analysisDetails.innerHTML = `
+        <div class="analysis-error">
+          <span class="error-icon">⚠️</span>
+          <span class="error-message">${message}</span>
+        </div>
+      `;
+      analysisDetails.style.display = 'block';
+    }
+  }
+
+  openDetailedAnalysis() {
+    // 팝업 열기
+    chrome.runtime.sendMessage({
+      action: 'openPopup'
+    });
+  }
+
+  removeInfoGuardUI() {
+    if (this.overlayElement && this.overlayElement.parentNode) {
+      this.overlayElement.parentNode.removeChild(this.overlayElement);
+      this.overlayElement = null;
+    }
+  }
 }
 
-// 콘텐츠 스크립트 시작
-const contentScript = new InfoGuardContent();
+// 페이지 로드 완료 후 초기화
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    new InfoGuardContentScript();
+  });
+} else {
+  new InfoGuardContentScript();
+}
+
+// YouTube 동적 콘텐츠 로딩 대기
+const waitForYouTubeContent = () => {
+  if (document.querySelector('h1') || document.querySelector('.ytd-video-primary-info-renderer')) {
+    new InfoGuardContentScript();
+  } else {
+    setTimeout(waitForYouTubeContent, 1000);
+  }
+};
+
+// 페이지 로드 후 YouTube 콘텐츠 대기
+setTimeout(waitForYouTubeContent, 2000);

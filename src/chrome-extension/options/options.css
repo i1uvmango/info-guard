@@ -1,0 +1,388 @@
+/* Info-Guard Chrome Extension Options CSS */
+/* 설정 페이지 스타일링 */
+
+:root {
+    --primary-color: #2563eb;
+    --primary-hover: #1d4ed8;
+    --secondary-color: #64748b;
+    --secondary-hover: #475569;
+    --success-color: #059669;
+    --warning-color: #d97706;
+    --danger-color: #dc2626;
+    --danger-hover: #b91c1c;
+    
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8fafc;
+    --bg-tertiary: #f1f5f9;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+    
+    --border-color: #e2e8f0;
+    --border-hover: #cbd5e1;
+    
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 0.75rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-2xl: 3rem;
+}
+
+/* 다크 테마 */
+[data-theme="dark"] {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #334155;
+    
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    
+    --border-color: #334155;
+    --border-hover: #475569;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    background-color: var(--bg-secondary);
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: var(--bg-primary);
+    min-height: 100vh;
+    box-shadow: var(--shadow-lg);
+}
+
+/* 헤더 */
+.header {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+    color: white;
+    padding: var(--spacing-xl);
+    text-align: center;
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.logo-icon {
+    width: 48px;
+    height: 48px;
+    margin-right: var(--spacing-md);
+    border-radius: var(--radius-md);
+}
+
+.logo-text {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
+/* 메인 콘텐츠 */
+.main-content {
+    padding: var(--spacing-xl);
+}
+
+.settings-section {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    margin-bottom: var(--spacing-xl);
+}
+
+.settings-section h2 {
+    color: var(--text-primary);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.setting-item {
+    margin-bottom: var(--spacing-lg);
+}
+
+.setting-item:last-child {
+    margin-bottom: 0;
+}
+
+.setting-item label {
+    display: block;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.setting-item input[type="text"],
+.setting-item input[type="url"],
+.setting-item input[type="number"],
+.setting-item select {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.setting-item input:focus,
+.setting-item select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+}
+
+.help-text {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-top: var(--spacing-xs);
+    line-height: 1.4;
+}
+
+/* 체크박스 그룹 */
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-md);
+    transition: background-color 0.2s;
+}
+
+.checkbox-item:hover {
+    background-color: var(--bg-tertiary);
+}
+
+.checkbox-item input[type="checkbox"] {
+    margin-right: var(--spacing-sm);
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary-color);
+}
+
+.checkbox-item span {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+/* 버튼 스타일 */
+.button-group {
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-lg);
+}
+
+.primary-btn,
+.secondary-btn,
+.danger-btn {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+}
+
+.primary-btn {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.primary-btn:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.secondary-btn {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.secondary-btn:hover {
+    background-color: var(--secondary-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.danger-btn {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.danger-btn:hover {
+    background-color: var(--danger-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+/* 푸터 */
+.footer {
+    background-color: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--border-color);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--success-color);
+    margin-right: var(--spacing-sm);
+    animation: pulse 2s infinite;
+}
+
+.status-text {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* 애니메이션 */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .container {
+        margin: 0;
+        border-radius: 0;
+    }
+    
+    .header {
+        border-radius: 0;
+        padding: var(--spacing-lg);
+    }
+    
+    .main-content {
+        padding: var(--spacing-lg);
+    }
+    
+    .settings-section {
+        padding: var(--spacing-lg);
+    }
+    
+    .button-group {
+        flex-direction: column;
+    }
+    
+    .button-group button {
+        width: 100%;
+    }
+}
+
+/* 로딩 상태 */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid var(--border-color);
+    border-top: 2px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 성공/에러 메시지 */
+.message {
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-lg);
+    font-weight: 500;
+}
+
+.message.success {
+    background-color: rgb(5 150 105 / 0.1);
+    color: var(--success-color);
+    border: 1px solid rgb(5 150 105 / 0.2);
+}
+
+.message.error {
+    background-color: rgb(220 38 38 / 0.1);
+    color: var(--danger-color);
+    border: 1px solid rgb(220 38 38 / 0.2);
+}
+
+.message.warning {
+    background-color: rgb(217 119 6 / 0.1);
+    color: var(--warning-color);
+    border: 1px solid rgb(217 119 6 / 0.2);
+}
