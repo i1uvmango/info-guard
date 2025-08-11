@@ -358,11 +358,3 @@ pytest src/python-server/tests/test_analysis.py -v
 ## 📝 라이선스
 
 이 프로젝트는 MIT 라이선스 하에 배포됩니다. 자세한 내용은 `LICENSE` 파일을 참조하세요.
-
-## 📞 연락처
-
-프로젝트 링크: [https://github.com/yourusername/info-guard](https://github.com/yourusername/info-guard)
-
----
-
-**Info-Guard** - YouTube 영상 신뢰도를 AI로 분석하는 스마트한 플랫폼 🚀
